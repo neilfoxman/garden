@@ -8,27 +8,23 @@ function setup() {
 	createCanvas(500,500);
 
 	organisms.push(new Grass(width/2, height/2));
-	// var o = new Organism(100,100);
-	// var g = new Grass(200, 200);
-	//
-	// organisms[0].age();
-	// g.age();
-
 	resources.push(new Rain());
+
+	console.log(organisms[0].testLoc.parent);
 }
+
+
+
 
 function draw() {
 	t++;
 	background(210);
 
-	// console.log(organisms.length);
-	// console.log(organisms[0].id);
-	// organisms[0].age();
 	var numOrganisms = organisms.length;
 	for(var i = 0; i < numOrganisms; i++){
 		var organism = organisms[i];
-
 		// console.log(organism.id);
+
 		organism.age();
 	}
 
