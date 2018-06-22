@@ -11,6 +11,15 @@ function setup() {
 	organisms[0].seed();
 	resources.push(new Rain());
 
+	// var g = organisms[0]
+	// console.log("Organism age: " + g.ageCounter)
+	// for(var idxLoc = 0; idxLoc < g.locs.length; idxLoc++){
+	// 	locAge = g.locs[idxLoc].ageCounter;
+	// 	console.log("loc age:" + locAge);
+	// }
+
+
+	// noLoop();
 }
 
 
@@ -22,19 +31,27 @@ function draw() {
 	var numResources = resources.length;
 	var numOrganisms = organisms.length;
 
+	// Cycle resources
 	for(var i = 0; i<numResources; i++){
 		resources[i].cycle();
 	}
 
-	for(var i = 0; i < numOrganisms; i++){
-		organisms[i].soak();
-	}
-
+	// Age organisms
 	for(var i = 0; i < numOrganisms; i++){
 		organisms[i].age();
 	}
 
+	// Organisms collect resources
+	for(var i = 0; i < numOrganisms; i++){
+		organisms[i].soak(resources);
+	}
 
+	// Organisms do stuff depending on surrounding organisms
+	for(var i = 0; i < numOrganisms; i++){
+		organisms[i].interact(organisms);
+	}
+
+	// show results
 	for(var i = 0; i < numOrganisms; i++){
 		organisms[i].show();
 	}
