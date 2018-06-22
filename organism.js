@@ -1,18 +1,32 @@
-var idCounterOrg = 1;
+var idCounterOrganism = 1;
 
-function Organism(xStart,yStart){
-  this.id = idCounterOrg++;
-  this.xStart = xStart;
-  this.yStart = yStart;
-  this.locs = []; // points that relate to the organism (to be filled on the screen)
+function Organism(startPos){
+  this.id = idCounterOrganism++;
   this.type = "Unassigned";
+  this.startPos = startPos;
+  this.locs = []; // points that relate to the organism (to be filled on the screen)
   this.ageCounter = 0;
+
+
+  // Create Seed
+  this.seed = function(){
+    var defaultRadius = 10;
+    for(var pxx = startPos.x - defaultRadius; pxx <= startPos.x + defaultRadius; pxx++){
+      for(var pxy = startPos.y - defaultRadius; pxy <= startPos.y + defaultRadius; pxy++){
+        if(dist(pxx, pxy, startPos.x, startPos.y) <= defaultRadius){
+          var loc = new Loc(this, createVector(pxx, pxy));
+          this.locs.push(loc);
+        }
+      }
+    }
+  }
+
 
   // Location occupied by current organism
   function Loc(parent, pos){
-    this.parent = parent; // reference to containing organism
+    this.parentOrganism = parent; // reference to containing organism
     this.pos = pos; // actual xy position
-    this.color; // color to show
+    this.color = color(0); // color to show
     this.spent = false; // boolean indicating if location has interacted this round
   }
 
@@ -22,9 +36,8 @@ function Organism(xStart,yStart){
 
   // Main function that acts depending on nutrients and surroundings
   this.age = function(){
-    // console.log("Organism " + this.id + " of type " + this.type + " has unassigned age() function.");
     this.ageCounter++;
-
+    
     // for each pixel belonging to this organism
       // var arrayOfLocs = this.getSurroundings()  // find all relevant locs that belong to a foreign organism
       // var actionOwner = determineActionOwner()
@@ -38,27 +51,19 @@ function Organism(xStart,yStart){
   };
 
   this.show = function(){
-    // for each loc
-      // paint loc color
+    for(idxLoc = 0; idxLoc < this.locs.length; idxLoc++){
+      var loc = this.locs[idxLoc];
+      set(loc.pos.x, loc.pos.y, loc.color);
+    }
+    updatePixels();
   };
 }
 
 
-function Grass(xStart, yStart){
-  Organism.call(this, xStart, yStart);
+function Grass(startPos){
+  Organism.call(this, startPos);
   this.type = "Grass";
-
-   // Plant Seed upon construction
-   this.baseRadius = 20;
-
-  this.age = function(){
-    this.ageCounter++;
-    fill(255,0,0);
-    noStroke();
-
-    // for each pixel occupied by this organism
-
-  }
+  // console.log(startPos);
 
 
 }

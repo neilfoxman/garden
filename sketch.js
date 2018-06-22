@@ -7,10 +7,10 @@ function setup() {
 	// createCanvas(windowWidth, windowHeight);
 	createCanvas(500,500);
 
-	organisms.push(new Grass(width/2, height/2));
+	organisms.push(new Grass(createVector(width/2, height/2)));
+	organisms[0].seed();
 	resources.push(new Rain());
 
-	console.log(organisms[0].testLoc.parent);
 }
 
 
@@ -19,21 +19,27 @@ function setup() {
 function draw() {
 	t++;
 	background(210);
-
-	var numOrganisms = organisms.length;
-	for(var i = 0; i < numOrganisms; i++){
-		var organism = organisms[i];
-		// console.log(organism.id);
-
-		organism.age();
-	}
-
 	var numResources = resources.length;
-	for(var i = 0; i<numResources; i++){
-		var resource = resources[i];
+	var numOrganisms = organisms.length;
 
-		resource.age();
+	for(var i = 0; i<numResources; i++){
+		resources[i].cycle();
 	}
+
+	for(var i = 0; i < numOrganisms; i++){
+		organisms[i].soak();
+	}
+
+	for(var i = 0; i < numOrganisms; i++){
+		organisms[i].age();
+	}
+
+
+	for(var i = 0; i < numOrganisms; i++){
+		organisms[i].show();
+	}
+
+
 
 
 }
