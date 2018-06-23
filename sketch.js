@@ -8,8 +8,12 @@ function setup() {
 	createCanvas(500,500);
 
 	organisms.push(new Grass(createVector(width/2, height/2)));
-	organisms[0].seed();
+	organisms.push(new Grass(createVector(organisms[0].startPos.x + 5, organisms[0].startPos.y)));
 	resources.push(new Rain());
+
+	for(var organismsIdx = 0; organismsIdx < organisms.length; organismsIdx++){
+		organisms[organismsIdx].seed();
+	}
 
 	// var g = organisms[0]
 	// console.log("Organism age: " + g.ageCounter)
@@ -19,7 +23,7 @@ function setup() {
 	// }
 
 
-	// noLoop();
+	noLoop();
 }
 
 
@@ -72,5 +76,4 @@ function oneOutOf(chance){
 	else{
 		return false;
 	}
-
 }
