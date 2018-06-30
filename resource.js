@@ -2,7 +2,10 @@ var idCounterResource = 1;
 
 function Resource(){
   this.id = idCounterResource++;
+  this.entityType = "Resource";
   this.type = "Unassigned";
+
+  RESOURCES.push(this);
 
   this.cycle = function(){
     console.log("Resource " + this.id + " of type " + this.type + " has unassigned cycle() function.");
