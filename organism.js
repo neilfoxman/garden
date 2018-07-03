@@ -6,9 +6,16 @@ function Organism(startPos) {
   this.type = "Unassigned";
   this.startPos = startPos;
   this.locs = []; // points that relate to the organism (to be filled on the screen)
-  this.ageCounter = 0; // age counter for entire organism=
+  this.ageCounter = 0; // age counter for entire organism
 
   ORGANISMS.push(this); // Add this organism to the list
+
+
+
+
+
+
+
 
 
   /* ---------- LIFECYCLE FUNCTIONS ----------
@@ -20,15 +27,29 @@ function Organism(startPos) {
   // Create Seed.  Should be called once.  Used to place an organism in the field
   // can alter to determine starting shape/size.
   this.seed = function() {
+    console.log("seed(): started for organism " + this.id + " of type " + this.type);
     this.createSeed(); // Make seed shape
+    // for(var thisLocIdx = 0; thisLocIdx < this.locs.length; thisLocIdx++){
+    //   console.log("thisLocIdx = " + thisLocIdx + " of type " + this.locs[thisLocIdx].)
+    // }
     // Delete clashes with other organisms
-    for(var locIdx = 0; locIdx < LOCS.length; locIdx++){
-      var clashingLoc = this.getLocAt(LOCS[locIdx]);
-      if(clashingLoc && LOCS[locIdx].entityType == "Organism"){
+    console.log("seed(): Setting clashes as deletable for organism " + this.id);
+    var numDeletable = 0;
+    for(var locIdx = 0; locIdx < LOCS.length; locIdx++){ // for each loc already declared
+      var origLoc = LOCS[locIdx]; // get the original loc from the LOC list
+      var clashingLoc = this.getLocAt(origLoc); // compare if there is a clashing loc in current organism
+      if(clashingLoc && origLoc.parent.entityType == "Organism"){
+      // if(clashingLoc){
+        console.log("seed(): origLoc - parent:" + origLoc.parent.id + " coord:(" + origLoc.pos.x + "," + origLoc.pos.y + ")");
+        console.log("seed(): clashingLoc - parent:" + clashingLoc.parent.id + " coord:(" + clashingLoc.pos.x + "," + clashingLoc.pos.y + ")");
         clashingLoc.deletable = true;
+        numDeletable++;
+      } else{
+        // console.log("Entity type was " + LOCS[locIdx].entityType);
+        // console.log("Type was " + LOCS[locIdx].type);
       }
     }
-
+    console.log("seed(): Set " + numDeletable + " as deletable");
     refreshLocs(); // refresh the loc list
     this.setSeedAppearance(); // apply initial color
   }
@@ -104,15 +125,19 @@ function Organism(startPos) {
   // create default seed shape
 
   this.createSeed = function() {
+    console.log("createSeed(): started for organism " + this.id);
     var defaultRadius = 10;
+    var numNewLocs = 0;
     for (var pxx = startPos.x - defaultRadius; pxx <= startPos.x + defaultRadius; pxx++) {
       for (var pxy = startPos.y - defaultRadius; pxy <= startPos.y + defaultRadius; pxy++) {
         if (dist(pxx, pxy, startPos.x, startPos.y) <= defaultRadius) {
           var loc = new Loc(this, createVector(pxx, pxy));
           this.locs.push(loc);
+          numNewLocs++;
         }
       }
     }
+    console.log("createSeed(): created " + numNewLocs + " new locs");
   }
 
   this.setSeedAppearance = function() {
@@ -143,15 +168,16 @@ function Organism(startPos) {
   Functions used commonly with organisms
   */
   this.getLocAt = function(compareLoc){
+    // console.log("Length is " + this.locs.length);
     for(var thisLocIdx = 0; thisLocIdx < this.locs.length; thisLocIdx++){
+      // console.log("thisLocIdx is " + thisLocIdx);
       var thisLoc = this.locs[thisLocIdx];
-
-      if(compareLoc.pos.x == thisLoc.pos.x || compareLoc.pos.y == thisLoc.pos.y){
+      // console.log(compareLoc.pos.x + " to " + thisLoc.pos.x + "\t" + compareLoc.pos.y + " to " + thisLoc.pos.y);
+      if(compareLoc.pos.x == thisLoc.pos.x && compareLoc.pos.y == thisLoc.pos.y){
         return(thisLoc);
-      } else {
-        return(null);
       }
     }
+    return(null)
 
   }
 
