@@ -10,6 +10,7 @@ function setup() {
 
 	var g1 = new Grass(createVector(width/2, height/2));
 	var g2 = new Grass(createVector(ORGANISMS[0].startPos.x + 10, ORGANISMS[0].startPos.y));
+	var g3 = new Grass(createVector(ORGANISMS[0].startPos.x, ORGANISMS[0].startPos.y - 10));
 	var r1 = new Rain();
 
 	for(var organismsIdx = 0; organismsIdx < ORGANISMS.length; organismsIdx++){
@@ -64,21 +65,31 @@ function draw() {
 
 
 function refreshLocs(){
-	console.log("refreshLocs(): started");
+	// console.log("refreshLocs(): started");
 	// empty LOCS and only re-add organism locs not marked as deletable
 	LOCS = [];
 	for(var organismsIdx = 0; organismsIdx < ORGANISMS.length; organismsIdx++){
 		var organism = ORGANISMS[organismsIdx];
-		var skipped = 0;
-		for (var locIdx = 0; locIdx < organism.locs.length; locIdx++){
-			var loc = organism.locs[locIdx];
-			if(!loc.deletable){
-				LOCS.push(loc);
-			} else{
-				// console.log("refreshLocs(): skipping " + loc.pos.x + ", " + loc.pos.y + " of organism " + loc.parent.id);
-				skipped++;
-			}
+
+		//remove deletable locs from organism locs list
+		organism.locs = organism.locs.filter(function(organismLoc){return(!organismLoc.deletable)});
+
+		// add final locs to LOCS
+		for(var organismLocsIdx = 0; organismLocsIdx < organism.locs.length; organismLocsIdx++){
+			var organismLoc = organism.locs[organismLocsIdx]
+			LOCS.push(organismLoc);
 		}
+
+		// var skipped = 0;
+		// for (var locIdx = 0; locIdx < organism.locs.length; locIdx++){
+		// 	var loc = organism.locs[locIdx];
+		// 	if(!loc.deletable){
+		// 		LOCS.push(loc);
+		// 	} else{
+		// 		// console.log("refreshLocs(): skipping " + loc.pos.x + ", " + loc.pos.y + " of organism " + loc.parent.id);
+		// 		skipped++;
+		// 	}
+		// }
 		// console.log("refreshLocs(): Skipped deletables of organism " + organism.id + ". Skipped " + skipped);
 		// console.log("refreshLocs(): LOCS is now of length " + LOCS.length);
 	}

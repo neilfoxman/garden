@@ -27,21 +27,20 @@ function Organism(startPos) {
   // Create Seed.  Should be called once.  Used to place an organism in the field
   // can alter to determine starting shape/size.
   this.seed = function() {
-    console.log("seed(): started for organism " + this.id + " of type " + this.type);
+    // console.log("seed(): started for organism " + this.id + " of type " + this.type);
     this.createSeed(); // Make seed shape
     // for(var thisLocIdx = 0; thisLocIdx < this.locs.length; thisLocIdx++){
     //   console.log("thisLocIdx = " + thisLocIdx + " of type " + this.locs[thisLocIdx].)
     // }
     // Delete clashes with other organisms
-    console.log("seed(): Setting clashes as deletable for organism " + this.id);
+    // console.log("seed(): Setting clashes as deletable for organism " + this.id);
     var numDeletable = 0;
     for(var locIdx = 0; locIdx < LOCS.length; locIdx++){ // for each loc already declared
       var origLoc = LOCS[locIdx]; // get the original loc from the LOC list
       var clashingLoc = this.getLocAt(origLoc); // compare if there is a clashing loc in current organism
       if(clashingLoc && origLoc.parent.entityType == "Organism"){
-      // if(clashingLoc){
-        console.log("seed(): origLoc - parent:" + origLoc.parent.id + " coord:(" + origLoc.pos.x + "," + origLoc.pos.y + ")");
-        console.log("seed(): clashingLoc - parent:" + clashingLoc.parent.id + " coord:(" + clashingLoc.pos.x + "," + clashingLoc.pos.y + ")");
+        // console.log("seed(): origLoc - parent:" + origLoc.parent.id + " coord:(" + origLoc.pos.x + "," + origLoc.pos.y + ")");
+        // console.log("seed(): clashingLoc - parent:" + clashingLoc.parent.id + " coord:(" + clashingLoc.pos.x + "," + clashingLoc.pos.y + ")");
         clashingLoc.deletable = true;
         numDeletable++;
       } else{
@@ -49,7 +48,7 @@ function Organism(startPos) {
         // console.log("Type was " + LOCS[locIdx].type);
       }
     }
-    console.log("seed(): Set " + numDeletable + " as deletable");
+    // console.log("seed(): Set " + numDeletable + " as deletable");
     refreshLocs(); // refresh the loc list
     this.setSeedAppearance(); // apply initial color
   }
@@ -125,7 +124,7 @@ function Organism(startPos) {
   // create default seed shape
 
   this.createSeed = function() {
-    console.log("createSeed(): started for organism " + this.id);
+    // console.log("createSeed(): started for organism " + this.id);
     var defaultRadius = 10;
     var numNewLocs = 0;
     for (var pxx = startPos.x - defaultRadius; pxx <= startPos.x + defaultRadius; pxx++) {
@@ -137,7 +136,7 @@ function Organism(startPos) {
         }
       }
     }
-    console.log("createSeed(): created " + numNewLocs + " new locs");
+    // console.log("createSeed(): created " + numNewLocs + " new locs");
   }
 
   this.setSeedAppearance = function() {
