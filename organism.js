@@ -7,6 +7,7 @@ function Organism(startPos) {
   this.startPos = startPos;
   this.locs = []; // points that relate to the organism (to be filled on the screen)
   this.ageCounter = 0; // age counter for entire organism
+  this.soakLocs = [];
 
   ORGANISMS.push(this); // Add this organism to the list
 
@@ -29,23 +30,24 @@ function Organism(startPos) {
   this.seed = function() {
     // console.log("seed(): started for organism " + this.id + " of type " + this.type);
     this.createSeed(); // Make seed shape
-    // for(var thisLocIdx = 0; thisLocIdx < this.locs.length; thisLocIdx++){
-    //   console.log("thisLocIdx = " + thisLocIdx + " of type " + this.locs[thisLocIdx].)
-    // }
-    // Delete clashes with other organisms
-    // console.log("seed(): Setting clashes as deletable for organism " + this.id);
+    // console.log("seed(): createSeed() complete. this.locs.length = " + this.locs.length);
+
     var numDeletable = 0;
-    for(var locIdx = 0; locIdx < LOCS.length; locIdx++){ // for each loc already declared
-      var origLoc = LOCS[locIdx]; // get the original loc from the LOC list
-      var clashingLoc = this.getLocAt(origLoc); // compare if there is a clashing loc in current organism
-      if(clashingLoc && origLoc.parent.entityType == "Organism"){
-        // console.log("seed(): origLoc - parent:" + origLoc.parent.id + " coord:(" + origLoc.pos.x + "," + origLoc.pos.y + ")");
-        // console.log("seed(): clashingLoc - parent:" + clashingLoc.parent.id + " coord:(" + clashingLoc.pos.x + "," + clashingLoc.pos.y + ")");
-        clashingLoc.deletable = true;
-        numDeletable++;
-      } else{
-        // console.log("Entity type was " + LOCS[locIdx].entityType);
-        // console.log("Type was " + LOCS[locIdx].type);
+    var allLocs = getAllLocs();
+    // console.log("seed(): allLocs length is " + allLocs.length);
+    for(var allLocsIdx = 0; allLocsIdx < allLocs.length; allLocsIdx++){ // for each loc already declared
+      var origLoc = allLocs[allLocsIdx]; // get the original loc placed
+      if(origLoc.parent != this){
+        var clashingLoc = this.getLocAt(origLoc); // compare if there is a clashing loc in current organism
+        if(clashingLoc && origLoc.parent.entityType == "Organism"){
+          // console.log("seed(): origLoc - parent:" + origLoc.parent.id + " coord:(" + origLoc.pos.x + "," + origLoc.pos.y + ")");
+          // console.log("seed(): clashingLoc - parent:" + clashingLoc.parent.id + " coord:(" + clashingLoc.pos.x + "," + clashingLoc.pos.y + ")");
+          clashingLoc.deletable = true;
+          numDeletable++;
+        } else{
+          // console.log("Entity type was " + LOCS[locIdx].entityType);
+          // console.log("Type was " + LOCS[locIdx].type);
+        }
       }
     }
     // console.log("seed(): Set " + numDeletable + " as deletable");
@@ -55,15 +57,35 @@ function Organism(startPos) {
 
   // This function increments the age counter of the organism and its Locs
   this.age = function() {
-    this.ageCounter++;
+    this.ageCounter++; // age organism
+
+    // age each location occupied by organism
     for (var idxLoc = 0; idxLoc < this.locs.length; idxLoc++) {
       this.locs[idxLoc].ageCounter++;
     }
+
+    // age soaked resources as they will be used over time by the organism
+    for (var idxSoakLocs = 0; idxSoakLocs < this.soakLocs.length; idxSoakLocs++){
+      this.soakLocs[idxSoakLocs].ageCounter++;
+    }
   }
 
-  // Soak up nutrients in locations occupied by this organism.
+  // Soak up nutrients in locations occupied by this organism.  Also determine which locs will act
   this.soak = function() {
     // gather all nutrients
+    for(var resourceIdx = 0; resourceIdx < RESOURCES.length; resourceIdx++){
+      var resource = RESOURCES[resourceIdx];
+
+      for(var resourceLocsIdx = 0; resourceLocsIdx < resource.locs.length; resourceLocsIdx++){
+        var resourceLoc = resource.locs[resourceLocsIdx];
+
+        var soakLoc = this.getLocAt(resourceLoc);
+        if(soakLoc){
+          this.soakLocs.push(soakLoc);
+        }
+      }
+    }
+    this.digest();
   }
 
   // interact() is the main function for an organism.  It orchestrates most of the
@@ -154,6 +176,10 @@ function Organism(startPos) {
 
   // Blank function used to update appearance based on age or health
   this.updateAppearance = function() {
+
+  }
+
+  this.digest = function() {
 
   }
 
