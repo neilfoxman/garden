@@ -21,7 +21,7 @@ function setup() {
 
 
 	console.log("Setup Complete.");
-	noLoop();
+	// noLoop();
 }
 
 
@@ -30,39 +30,40 @@ function setup() {
 function draw() {
 	TIME++;
 	background(210);
-	var numResources = RESOURCES.length;
-	var numOrganisms = ORGANISMS.length;
+	// line(mouseX, 0, mouseX, 100);
 
 	// Cycle resources
 	// console.log("Cycling resources...");
-	for(var i = 0; i<numResources; i++){
+	for(var i = 0; i<RESOURCES.length; i++){
 		RESOURCES[i].cycle();
 	}
 
 	// Age organisms
 	// console.log("Aging organisms...");
-	for(var i = 0; i < numOrganisms; i++){
+	for(var i = 0; i < ORGANISMS.length; i++){
 		ORGANISMS[i].age();
 	}
 
 	// Organisms collect resources
 	// console.log("Soaking...");
-	for(var i = 0; i < numOrganisms; i++){
+	for(var i = 0; i < ORGANISMS.length; i++){
 		ORGANISMS[i].soak();
 	}
+	refreshLocs();
+
 
 	// Organisms do stuff depending on surrounding organisms
 	// console.log("Interacting...");
-	for(var i = 0; i < numOrganisms; i++){
+	for(var i = 0; i < ORGANISMS.length; i++){
 		ORGANISMS[i].interact();
 	}
 
 	// show results
 	// console.log("Displaying...");
-	for(var i = 0; i < numOrganisms; i++){
+	for(var i = 0; i < ORGANISMS.length; i++){
 		ORGANISMS[i].show();
 	}
-	for(var i = 0; i<numResources; i++){
+	for(var i = 0; i<RESOURCES.length; i++){
 		RESOURCES[i].show();
 	}
 
@@ -70,22 +71,21 @@ function draw() {
 
 
 function refreshLocs(){
+	ORGANISMS = ORGANISMS.filter(function(organism){return(!organism.deletable)}); // remove dead organisms
 
-	// console.log("refreshLocs(): started");
-	// empty LOCS and only re-add organism locs not marked as deletable
-	// LOCS = [];
 	for(var organismsIdx = 0; organismsIdx < ORGANISMS.length; organismsIdx++){
 		var organism = ORGANISMS[organismsIdx];
 
-		//remove deletable locs from organism locs list
+		//remove deletable locs from organism locs lists
 		organism.locs = organism.locs.filter(function(organismLoc){return(!organismLoc.deletable)});
 		organism.soakLocs = organism.soakLocs.filter(function(organismSoakLoc){return(!organismSoakLoc.deletable)});
+	}
 
-		// add final locs to LOCS
-		// for(var organismLocsIdx = 0; organismLocsIdx < organism.locs.length; organismLocsIdx++){
-		// 	var organismLoc = organism.locs[organismLocsIdx]
-		// 	LOCS.push(organismLoc);
-		// }
+	for(var resourcesIdx = 0; resourcesIdx < RESOURCES.length; resourcesIdx++){
+		var resource = RESOURCES[resourcesIdx];
+
+		//remove soaked locs from resource ownership
+		resource.locs = resource.locs.filter(function(resourceLoc){return(!resourceLoc.soaked)});
 	}
 
 }
@@ -102,6 +102,10 @@ function oneOutOf(chance){
 		return false;
 	}
 }
+
+
+
+
 
 function getAllLocs(){
 	var retLocs = [];

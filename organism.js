@@ -8,6 +8,8 @@ function Organism(startPos) {
   this.locs = []; // points that relate to the organism (to be filled on the screen)
   this.ageCounter = 0; // age counter for entire organism
   this.soakLocs = [];
+  this.health = 50;
+  this.deletable = false;
 
   ORGANISMS.push(this); // Add this organism to the list
 
@@ -37,21 +39,22 @@ function Organism(startPos) {
     // console.log("seed(): allLocs length is " + allLocs.length);
     for(var allLocsIdx = 0; allLocsIdx < allLocs.length; allLocsIdx++){ // for each loc already declared
       var origLoc = allLocs[allLocsIdx]; // get the original loc placed
-      if(origLoc.parent != this){
+
+      if(origLoc.parent != this){ // if that locs parent is not this organism
         var clashingLoc = this.getLocAt(origLoc); // compare if there is a clashing loc in current organism
         if(clashingLoc && origLoc.parent.entityType == "Organism"){
           // console.log("seed(): origLoc - parent:" + origLoc.parent.id + " coord:(" + origLoc.pos.x + "," + origLoc.pos.y + ")");
           // console.log("seed(): clashingLoc - parent:" + clashingLoc.parent.id + " coord:(" + clashingLoc.pos.x + "," + clashingLoc.pos.y + ")");
           clashingLoc.deletable = true;
           numDeletable++;
-        } else{
+        } else {
           // console.log("Entity type was " + LOCS[locIdx].entityType);
           // console.log("Type was " + LOCS[locIdx].type);
         }
       }
     }
     // console.log("seed(): Set " + numDeletable + " as deletable");
-    refreshLocs(); // refresh the loc list
+    refreshLocs(); // refresh all locs (delete deletable ones)
     this.setSeedAppearance(); // apply initial color
   }
 
@@ -73,19 +76,25 @@ function Organism(startPos) {
   // Soak up nutrients in locations occupied by this organism.  Also determine which locs will act
   this.soak = function() {
     // gather all nutrients
-    for(var resourceIdx = 0; resourceIdx < RESOURCES.length; resourceIdx++){
+    for(var resourceIdx = 0; resourceIdx < RESOURCES.length; resourceIdx++){ // for each resource
       var resource = RESOURCES[resourceIdx];
 
-      for(var resourceLocsIdx = 0; resourceLocsIdx < resource.locs.length; resourceLocsIdx++){
+      for(var resourceLocsIdx = 0; resourceLocsIdx < resource.locs.length; resourceLocsIdx++){ // for each loc owned by the resource
         var resourceLoc = resource.locs[resourceLocsIdx];
 
-        var soakLoc = this.getLocAt(resourceLoc);
-        if(soakLoc){
-          this.soakLocs.push(soakLoc);
+        var soakLoc = this.getLocAt(resourceLoc); // find a loc of this organism at the same loc as the resource
+        if(soakLoc){ // if a loc has been found in this organism that can soak a resource
+          this.soakLocs.push(resourceLoc); // add the resource to the soakLoc list
+          resourceLoc.soaked = true; // flag it as soaked (to change ownership)
         }
       }
     }
-    this.digest();
+    this.digest(); // interpret soaked resources for health
+    console.log("soak(): health for organism " + this.id + " is " + this.health);
+    if(this.health < 0){
+      this.deletable = true;
+      console.log("soak(): setting organism " + this.id + " as deletable");
+    }
   }
 
   // interact() is the main function for an organism.  It orchestrates most of the
@@ -129,9 +138,11 @@ function Organism(startPos) {
     this.updateAppearance();
     for (locsIdx = 0; locsIdx < this.locs.length; locsIdx++) {
       var loc = this.locs[locsIdx];
-      set(loc.pos.x, loc.pos.y, loc.color);
+      // set(loc.pos.x, loc.pos.y, loc.color);
+      stroke(loc.color);
+      point(loc.pos.x, loc.pos.y);
     }
-    updatePixels();
+    // updatePixels();
   };
 
 
@@ -180,7 +191,18 @@ function Organism(startPos) {
   }
 
   this.digest = function() {
+    // decrease health constantly due to metabolic energy tax
+    this.health -= 0.1;
 
+    // Increase health based on nutrients picked up
+    for(var soakLocsIdx = 0; soakLocsIdx < this.soakLocs.length; soakLocsIdx++){
+      var soakLoc = this.soakLocs[soakLocsIdx];
+
+      if(soakLoc.parent.type == "Rain"){
+        this.health += 1;
+        soakLoc.deletable = true;
+      }
+    }
   }
 
 

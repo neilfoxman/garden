@@ -6,6 +6,7 @@ function Loc(parent, pos) {
   this.color = color(0); // color to show
   this.interacted = false; // boolean indicating if location has interacted this round
   this.deletable = false; // flag for deletion
+  this.soaked = false; // flag for soaked status
   this.neighborPxs = [
     createVector(this.pos.x - 1, this.pos.y - 1),
     createVector(this.pos.x, this.pos.y - 1),

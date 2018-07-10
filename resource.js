@@ -15,9 +15,11 @@ function Resource(){
   this.show = function() {
     for (locsIdx = 0; locsIdx < this.locs.length; locsIdx++) {
       var loc = this.locs[locsIdx];
-      set(loc.pos.x, loc.pos.y, loc.color);
+      // set(loc.pos.x, loc.pos.y, loc.color);
+      stroke(loc.color);
+      point(loc.pos.x, loc.pos.y);
     }
-    updatePixels();
+    // updatePixels();
   };
 }
 
