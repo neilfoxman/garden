@@ -20,7 +20,7 @@ function Resource(){
       point(loc.pos.x, loc.pos.y);
     }
     // updatePixels();
-  };
+  }
 }
 
 function Rain(){

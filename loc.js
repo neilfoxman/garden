@@ -4,17 +4,22 @@ function Loc(parent, pos) {
   this.pos = pos; // actual xy position as vector
   this.ageCounter = 0; // age counter for specific location
   this.color = color(0); // color to show
-  this.interacted = false; // boolean indicating if location has interacted this round
-  this.deletable = false; // flag for deletion
-  this.soaked = false; // flag for soaked status
-  this.neighborPxs = [
-    createVector(this.pos.x - 1, this.pos.y - 1),
-    createVector(this.pos.x, this.pos.y - 1),
-    createVector(this.pos.x + 1, this.pos.y - 1),
-    createVector(this.pos.x - 1, this.pos.y),
-    createVector(this.pos.x + 1, this.pos.y),
-    createVector(this.pos.x - 1, this.pos.y + 1),
-    createVector(this.pos.x, this.pos.y + 1),
-    createVector(this.pos.x + 1, this.pos.y + 1)
-  ];
+  this.state = LOCSTATE.IDLE;
+  // this.interactionType = LOCINTERACTION.IDLE;
+  this.neighbors = []; // to store other locs of interest when determining actions
 }
+
+// var LOCINTERACTION = Object.freeze({
+// 	IDLE : 1,
+// 	GROW : 2,
+// 	FIGHT : 3,
+// 	DIE : 4
+// });
+
+var LOCSTATE = Object.freeze({
+  IDLE : {},
+  DEAD : {},
+  SOAKED : {},
+  GROWING : {},
+  FIGHTING : {},
+});

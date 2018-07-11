@@ -8,7 +8,8 @@ function Organism(startPos) {
   this.locs = []; // points that relate to the organism (to be filled on the screen)
   this.ageCounter = 0; // age counter for entire organism
   this.soakLocs = [];
-  this.health = 50;
+  this.interactionLocs = [];
+  this.health = 0;
   this.deletable = false;
 
   ORGANISMS.push(this); // Add this organism to the list
@@ -35,17 +36,18 @@ function Organism(startPos) {
     // console.log("seed(): createSeed() complete. this.locs.length = " + this.locs.length);
 
     var numDeletable = 0;
-    var allLocs = getAllLocs();
+    var allOrganismLocs = getAllOrganismLocs();
     // console.log("seed(): allLocs length is " + allLocs.length);
-    for(var allLocsIdx = 0; allLocsIdx < allLocs.length; allLocsIdx++){ // for each loc already declared
-      var origLoc = allLocs[allLocsIdx]; // get the original loc placed
+    for(var allOrganismLocsIdx = 0; allOrganismLocsIdx < allOrganismLocs.length; allOrganismLocsIdx++){ // for each loc already declared
+      var origLoc = allOrganismLocs[allOrganismLocsIdx]; // get the original loc placed
 
       if(origLoc.parent != this){ // if that locs parent is not this organism
         var clashingLoc = this.getLocAt(origLoc); // compare if there is a clashing loc in current organism
         if(clashingLoc && origLoc.parent.entityType == "Organism"){
           // console.log("seed(): origLoc - parent:" + origLoc.parent.id + " coord:(" + origLoc.pos.x + "," + origLoc.pos.y + ")");
           // console.log("seed(): clashingLoc - parent:" + clashingLoc.parent.id + " coord:(" + clashingLoc.pos.x + "," + clashingLoc.pos.y + ")");
-          clashingLoc.deletable = true;
+          // clashingLoc.deletable = true;
+          clashingLoc.state = LOCSTATE.DEAD;
           numDeletable++;
         } else {
           // console.log("Entity type was " + LOCS[locIdx].entityType);
@@ -54,7 +56,9 @@ function Organism(startPos) {
       }
     }
     // console.log("seed(): Set " + numDeletable + " as deletable");
-    refreshLocs(); // refresh all locs (delete deletable ones)
+    // refreshLocs(); // refresh all locs (delete deletable ones)
+    refreshLocs(); // delete locs marked as dead (clashing)
+    this.health = this.locs.length; // initialize health to same as loc length
     this.setSeedAppearance(); // apply initial color
   }
 
@@ -76,6 +80,7 @@ function Organism(startPos) {
   // Soak up nutrients in locations occupied by this organism.  Also determine which locs will act
   this.soak = function() {
     // gather all nutrients
+    // TODO: update so that it matches a resource loc map to an organism loc map for better speed
     for(var resourceIdx = 0; resourceIdx < RESOURCES.length; resourceIdx++){ // for each resource
       var resource = RESOURCES[resourceIdx];
 
@@ -85,37 +90,53 @@ function Organism(startPos) {
         var soakLoc = this.getLocAt(resourceLoc); // find a loc of this organism at the same loc as the resource
         if(soakLoc){ // if a loc has been found in this organism that can soak a resource
           this.soakLocs.push(resourceLoc); // add the resource to the soakLoc list
-          resourceLoc.soaked = true; // flag it as soaked (to change ownership)
+          // resourceLoc.soaked = true; // flag it as soaked (to change ownership)
+          resourceLoc.state = LOCSTATE.SOAKED;
         }
       }
     }
     this.digest(); // interpret soaked resources for health
-    console.log("soak(): health for organism " + this.id + " is " + this.health);
+    // console.log("soak(): health for organism " + this.id + " is " + this.health);
     if(this.health < 0){
       this.deletable = true;
-      console.log("soak(): setting organism " + this.id + " as deletable");
+      // console.log("soak(): setting organism " + this.id + " as deletable");
     }
   }
+
+
 
   // interact() is the main function for an organism.  It orchestrates most of the
   // activity functions below that act depending on nutrients and surroundings
   // Notes on semantics: I will use the word pixel to identify a location
   // regardless of who inhabits it.  A Loc is an inhabited pixel Location
   this.interact = function() {
-    // For each boundary loc
-    // if neighbors are occupied
-    // pick one at random and fight();
-    // if no neighbors are occupied
-    // boundary();
+    // reset all previous states
+    for(var thisLocsIdx = 0; thisLocsIdx < this.locs.length; thisLocsIdx ++){
+      var thisLoc = this.locs[thisLocsIdx];
+      thisLoc.state = LOCSTATE.IDLE;
+    }
 
-    // // find all relevant locs that belong to a foreign organism
-    // var interactionLocs = this.getInteractionLocs(); // gets locs of this organism that may interact
-    // for(var interactionLocsIdx = 0; interactionLocsIdx < interactionLocs.length; interactionLocsIdx++){
-    //   var interactionLoc = interactionLocs[interactionLocIdx];
-    //   this.determineActionOwner(interactionLoc);
-    //
-    //
-    // }
+    this.getInteractionLocs(); // gets locs of this organism that may interact
+    // console.log("interact(): Organism " + this.id + " returned " + this.interactionLocs.length + " interactionLocs");
+
+    this.determineInteractionTypes();
+
+    for(var interactionLocsIdx = 0; interactionLocsIdx < this.interactionLocs.length; interactionLocsIdx++){
+      var interactionLoc = this.interactionLocs[interactionLocsIdx];
+
+      if(interactionLoc.state == LOCSTATE.IDLE){
+
+      } else if (interactionLoc.state == LOCSTATE.DEAD){
+        this.die(interactionLoc);
+        interactionLoc.state = LOCSTATE.DEAD; // just to make sure state turns to dead for cleanup
+      } else if (interactionLoc.state == LOCSTATE.GROWING){
+        this.grow(interactionLoc);
+      } else if (interactionLoc.state == LOCSTATE.FIGHTING){
+        this.fight(interactionLoc);
+      } else {
+        console.log("Unknown interaction type in organism " + this.id + "of type " + this.type);
+      }
+    }
 
 
 
@@ -169,30 +190,20 @@ function Organism(startPos) {
         }
       }
     }
+
     // console.log("createSeed(): created " + numNewLocs + " new locs");
   }
 
+  // function used to initialize appearance of seed Locs
   this.setSeedAppearance = function() {
 
   }
 
-  // Look internally and choose which locs will be interacting
-  this.getInteractionLocs = function() {
-    // // Default is to find locs on edges
-    // for(var thisLocsIdx = 0; thisLocsIdx < this.locs.length; thisLocsIdx++){
-    //   var thisLoc = this.locs[thisLocsIdx];
-    //   if
-    // }
-  }
-
-  // Blank function used to update appearance based on age or health
-  this.updateAppearance = function() {
-
-  }
-
+  // determine health of organism based on previous health and
   this.digest = function() {
+
     // decrease health constantly due to metabolic energy tax
-    this.health -= 0.1;
+    this.health -= 0.0001 * this.locs.length;
 
     // Increase health based on nutrients picked up
     for(var soakLocsIdx = 0; soakLocsIdx < this.soakLocs.length; soakLocsIdx++){
@@ -200,10 +211,128 @@ function Organism(startPos) {
 
       if(soakLoc.parent.type == "Rain"){
         this.health += 1;
-        soakLoc.deletable = true;
+        soakLoc.state = LOCSTATE.DEAD;
       }
     }
   }
+
+  // Look internally and choose which locs will be interacting
+  this.getInteractionLocs = function() {
+    // Default is to find locs on edges
+
+    var organismLocMap = getOrganismLocMap();
+    for(var x = 0; x < width; x++){
+      for(var y = 0; y < height; y++){
+        var thisLoc = organismLocMap[x][y];
+        if(thisLoc && thisLoc.parent == this){   // If the spot is occupied and the owner is this organism
+
+          // get neighbors
+          thisLoc.neighbors = [
+            organismLocMap[thisLoc.pos.x-1][thisLoc.pos.y-1],
+            organismLocMap[thisLoc.pos.x][thisLoc.pos.y-1],
+            organismLocMap[thisLoc.pos.x+1][thisLoc.pos.y-1],
+            organismLocMap[thisLoc.pos.x-1][thisLoc.pos.y],
+            organismLocMap[thisLoc.pos.x+1][thisLoc.pos.y],
+            organismLocMap[thisLoc.pos.x-1][thisLoc.pos.y+1],
+            organismLocMap[thisLoc.pos.x][thisLoc.pos.y+1],
+            organismLocMap[thisLoc.pos.x+1][thisLoc.pos.y+1]
+          ]
+
+          // if not all neighbors are same organism
+          for(var neighborsIdx = 0; neighborsIdx < thisLoc.neighbors.length; neighborsIdx++){
+            var neighbor = thisLoc.neighbors[neighborsIdx];
+
+            if(!neighbor || neighbor.parent != thisLoc.parent){
+              this.interactionLocs.push(thisLoc);
+              // console.log("(" + thisLoc.pos.x + "," + thisLoc.pos.y + ")");
+              // thisLoc.color = color(255,0,0);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  this.determineInteractionTypes = function() {
+    // health delta is comparison of health and size
+    var healthDelta = this.health - this.locs.length;
+    console.log(healthDelta);
+
+    for(var interactionLocsIdx = 0; interactionLocsIdx < this.interactionLocs.length; interactionLocsIdx++){
+      var interactionLoc = this.interactionLocs[interactionLocsIdx];
+
+      if(healthDelta <= 0){
+        // a health delta of -1 means around 1 loc will die this turn out of the interaction locs
+        var probDie = (healthDelta * -1) / this.interactionLocs.length;
+        if(!getResultFromProbability(probDie)){
+          interactionLoc.state = LOCSTATE.IDLE;
+        } else {
+          interactionLoc.state = LOCSTATE.DEAD;
+        }
+
+      } else if(healthDelta > 0){
+        // can fight or grow if health is good.  first determine whether or not to expand
+        var probExpand = healthDelta / this.interactionLocs.length;
+        if(!getResultFromProbability(probExpand)){ // if no expansion
+          interactionLoc.state = LOCSTATE.IDLE; // set to idle
+        } else { // if expanding
+          // look at neighbor types
+          var unoccupiedNeighborIdxs = [];
+          var thisOrganismNeighborIdxs = [];
+          var occupiedNeighborIdxs = [];
+          for(var neighborsIdx = 0; neighborsIdx < interactionLoc.neighbors.length; neighborsIdx++){
+            var neighbor = interactionLoc.neighbors[neighborsIdx];
+            if(!neighbor){
+              unoccupiedNeighborIdxs.push(neighborsIdx);
+            } else if (neighbor.parent == this){
+              thisOrganismNeighborIdxs.push(neighborsIdx);
+            } else if (neighbor.parent != this){
+              occupiedNeighborIdxs.push(neighborsIdx);
+            } else{
+              console.log("determineInteractionTypes(): Unknown neighbor from interactionLoc at ("
+              + interactionLoc.pos.x + "," + interactionLoc.pos.y + ")");
+            }
+          } // for each neighbor
+
+          // determine if expanding through growing or fighting
+          if((unoccupiedNeighborIdxs.length + thisOrganismNeighborIdxs.length) > occupiedNeighborIdxs.length){
+            interactionLoc.state = LOCSTATE.GROWING;
+          } else {
+            interactionLoc.state = LOCSTATE. FIGHTING;
+          }
+
+
+
+        } // if expanding
+      } //healthDelta > 0
+    } // for each loc
+
+  }
+
+  // function used when interaction is set to die.
+  // Loc will be put in a dead state in interaction().  This just handles extra effects
+  this.die = function(actionLoc){
+
+  }
+
+  // function used to grow into unoccupied areas
+  this.grow = function(actionLoc){
+    
+  }
+
+  // function for fighting with neighbors
+  this.fight = function(actionLoc){
+
+  }
+
+  // Blank function used to update appearance based on age or health
+  this.updateAppearance = function() {
+
+  }
+
+
 
 
 
