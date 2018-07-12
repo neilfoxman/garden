@@ -11,6 +11,16 @@ function Organism(startPos) {
   this.interactionLocs = [];
   this.health = 0;
   this.deletable = false;
+  this.neighborKernel = [
+    createVector(-1, -1),
+    createVector(0, -1),
+    createVector(1, -1),
+    createVector(-1,0),
+    createVector(1,0),
+    createVector(-1, 1),
+    createVector(0, 1),
+    createVector(1, 1)
+  ]
 
   ORGANISMS.push(this); // Add this organism to the list
 
@@ -116,10 +126,10 @@ function Organism(startPos) {
       thisLoc.state = LOCSTATE.IDLE;
     }
 
+    this.interactionLocs = []; // clear interactionLocs
     this.getInteractionLocs(); // gets locs of this organism that may interact
-    // console.log("interact(): Organism " + this.id + " returned " + this.interactionLocs.length + " interactionLocs");
-
-    this.determineInteractionTypes();
+    this.determineInteractionTypes(); // sets interaction Locs to specific type
+    // console.log("interact(): " + TIME + " id:" + this.id + " this.interactionLocs.length=" + this.interactionLocs.length);
 
     for(var interactionLocsIdx = 0; interactionLocsIdx < this.interactionLocs.length; interactionLocsIdx++){
       var interactionLoc = this.interactionLocs[interactionLocsIdx];
@@ -137,20 +147,6 @@ function Organism(startPos) {
         console.log("Unknown interaction type in organism " + this.id + "of type " + this.type);
       }
     }
-
-
-
-
-
-
-    // var actionOwner = determineActionOwner()
-    // actionOwner.determineActionType(arrayOfLocs)
-    // if actionType == fight
-    // fight(arrayOfLocs)
-    // if actionType == die
-    // die(arrayOfLocs) // death function - may just remove Loc, exhaust resources
-    // if actionType == grow
-    // grow(arrayOfLocs); // grow function - may just pick surrounding Loc at Random
   }
 
 
@@ -165,6 +161,19 @@ function Organism(startPos) {
     }
     // updatePixels();
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -202,8 +211,8 @@ function Organism(startPos) {
   // determine health of organism based on previous health and
   this.digest = function() {
 
-    // decrease health constantly due to metabolic energy tax
-    this.health -= 0.0001 * this.locs.length;
+    // // decrease health constantly due to metabolic energy tax
+    // this.health -= 0.0001 * this.locs.length;
 
     // Increase health based on nutrients picked up
     for(var soakLocsIdx = 0; soakLocsIdx < this.soakLocs.length; soakLocsIdx++){
@@ -227,16 +236,13 @@ function Organism(startPos) {
         if(thisLoc && thisLoc.parent == this){   // If the spot is occupied and the owner is this organism
 
           // get neighbors
-          thisLoc.neighbors = [
-            organismLocMap[thisLoc.pos.x-1][thisLoc.pos.y-1],
-            organismLocMap[thisLoc.pos.x][thisLoc.pos.y-1],
-            organismLocMap[thisLoc.pos.x+1][thisLoc.pos.y-1],
-            organismLocMap[thisLoc.pos.x-1][thisLoc.pos.y],
-            organismLocMap[thisLoc.pos.x+1][thisLoc.pos.y],
-            organismLocMap[thisLoc.pos.x-1][thisLoc.pos.y+1],
-            organismLocMap[thisLoc.pos.x][thisLoc.pos.y+1],
-            organismLocMap[thisLoc.pos.x+1][thisLoc.pos.y+1]
-          ]
+          thisLoc.neighbors = []; // clear out previous neighbors
+          for(var neighborIdx = 0; neighborIdx < this.neighborKernel.length; neighborIdx++){
+            var neighborx = thisLoc.pos.x + this.neighborKernel[neighborIdx].x;
+            var neighbory = thisLoc.pos.y + this.neighborKernel[neighborIdx].y;
+            thisLoc.neighbors.push(organismLocMap[neighborx][neighbory]);
+          }
+          // console.log("getInteractionLocs(): " + thisLoc.neighbors.length);
 
           // if not all neighbors are same organism
           for(var neighborsIdx = 0; neighborsIdx < thisLoc.neighbors.length; neighborsIdx++){
@@ -258,7 +264,7 @@ function Organism(startPos) {
   this.determineInteractionTypes = function() {
     // health delta is comparison of health and size
     var healthDelta = this.health - this.locs.length;
-    console.log(healthDelta);
+    // console.log("determineInteractionTypes(): " + healthDelta);
 
     for(var interactionLocsIdx = 0; interactionLocsIdx < this.interactionLocs.length; interactionLocsIdx++){
       var interactionLoc = this.interactionLocs[interactionLocsIdx];
@@ -268,8 +274,10 @@ function Organism(startPos) {
         var probDie = (healthDelta * -1) / this.interactionLocs.length;
         if(!getResultFromProbability(probDie)){
           interactionLoc.state = LOCSTATE.IDLE;
+
         } else {
           interactionLoc.state = LOCSTATE.DEAD;
+
         }
 
       } else if(healthDelta > 0){
@@ -297,8 +305,10 @@ function Organism(startPos) {
           } // for each neighbor
 
           // determine if expanding through growing or fighting
-          if((unoccupiedNeighborIdxs.length + thisOrganismNeighborIdxs.length) > occupiedNeighborIdxs.length){
+          if((unoccupiedNeighborIdxs.length + thisOrganismNeighborIdxs.length) > occupiedNeighborIdxs.length &&
+              unoccupiedNeighborIdxs != []){
             interactionLoc.state = LOCSTATE.GROWING;
+            console.log("determineInteractionTypes(): " + TIME + " marked loc for growing (" + interactionLoc.pos.x + "," + interactionLoc.pos.y + ")");
           } else {
             interactionLoc.state = LOCSTATE. FIGHTING;
           }
@@ -319,7 +329,27 @@ function Organism(startPos) {
 
   // function used to grow into unoccupied areas
   this.grow = function(actionLoc){
-    
+    var possibleGrowLocIdxs = [];
+    for (var neighborsIdx = 0; neighborsIdx < actionLoc.neighbors.length; neighborsIdx++){
+      var neighbor = actionLoc.neighbors[neighborsIdx];
+
+      if(!neighbor){
+        possibleGrowLocIdxs.push(neighborsIdx);
+      }
+    }
+
+    var growLocIdx = random(possibleGrowLocIdxs); // choose index at random for growning
+    console.log("actionLoc.pos.x = " + actionLoc.pos.x);
+    console.log("actionLoc.pos.y = " + actionLoc.pos.y);
+    console.log("growLocIdx = " + growLocIdx);
+    console.log("this.neighborKernel = " + this.neighborKernel);
+    console.log("this.neighborKernel[growLocIdx].x = " + this.neighborKernel[growLocIdx].x);
+    console.log("this.neighborKernel[growLocIdx].y = " + this.neighborKernel[growLocIdx].y);
+    var growLocPos = createVector(
+      actionLoc.pos.x + this.neighborKernel[growLocIdx].x,
+      actionLoc.pos.y + this.neighborKernel[growLocIdx].y
+    )
+    this.locs.push(new Loc(this, growLocPos));
   }
 
   // function for fighting with neighbors
