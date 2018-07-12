@@ -8,7 +8,7 @@ var RESOURCES = []; // List of all resources
 
 function setup() {
 	// createCanvas(windowWidth, windowHeight);
-	createCanvas(600,500);
+	createCanvas(200,100);
 
 	// console.log("Creating starting organisms...");
 	var g1 = new Grass(createVector(width/2, height/2));
