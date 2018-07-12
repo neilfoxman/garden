@@ -21,6 +21,7 @@ function Organism(startPos) {
     createVector(0, 1),
     createVector(1, 1)
   ]
+  this.color = color(0);
 
   ORGANISMS.push(this); // Add this organism to the list
 
@@ -107,7 +108,7 @@ function Organism(startPos) {
     }
     this.digest(); // interpret soaked resources for health
     // console.log("soak(): health for organism " + this.id + " is " + this.health);
-    if(this.health < 0){
+    if(this.health < 1){
       this.deletable = true;
       // console.log("soak(): setting organism " + this.id + " as deletable");
     }
@@ -211,15 +212,16 @@ function Organism(startPos) {
   // determine health of organism based on previous health and
   this.digest = function() {
 
-    // // decrease health constantly due to metabolic energy tax
-    // this.health -= 0.0001 * this.locs.length;
+    // decrease health constantly due to metabolic energy tax
+    this.health -= 0.0001 * this.locs.length;
 
     // Increase health based on nutrients picked up
     for(var soakLocsIdx = 0; soakLocsIdx < this.soakLocs.length; soakLocsIdx++){
       var soakLoc = this.soakLocs[soakLocsIdx];
 
       if(soakLoc.parent.type == "Rain"){
-        this.health += 1;
+        // this.health += 1;
+        this.health += 10;
         soakLoc.state = LOCSTATE.DEAD;
       }
     }
@@ -306,9 +308,9 @@ function Organism(startPos) {
 
           // determine if expanding through growing or fighting
           if((unoccupiedNeighborIdxs.length + thisOrganismNeighborIdxs.length) > occupiedNeighborIdxs.length &&
-              unoccupiedNeighborIdxs != []){
+              unoccupiedNeighborIdxs.length > 0){
             interactionLoc.state = LOCSTATE.GROWING;
-            console.log("determineInteractionTypes(): " + TIME + " marked loc for growing (" + interactionLoc.pos.x + "," + interactionLoc.pos.y + ")");
+            // console.log("determineInteractionTypes() " + TIME + ": marked loc for growing (" + interactionLoc.pos.x + "," + interactionLoc.pos.y + ")");
           } else {
             interactionLoc.state = LOCSTATE. FIGHTING;
           }
@@ -339,17 +341,11 @@ function Organism(startPos) {
     }
 
     var growLocIdx = random(possibleGrowLocIdxs); // choose index at random for growning
-    console.log("actionLoc.pos.x = " + actionLoc.pos.x);
-    console.log("actionLoc.pos.y = " + actionLoc.pos.y);
-    console.log("growLocIdx = " + growLocIdx);
-    console.log("this.neighborKernel = " + this.neighborKernel);
-    console.log("this.neighborKernel[growLocIdx].x = " + this.neighborKernel[growLocIdx].x);
-    console.log("this.neighborKernel[growLocIdx].y = " + this.neighborKernel[growLocIdx].y);
     var growLocPos = createVector(
       actionLoc.pos.x + this.neighborKernel[growLocIdx].x,
       actionLoc.pos.y + this.neighborKernel[growLocIdx].y
     )
-    this.locs.push(new Loc(this, growLocPos));
+    this.addLoc(growLocPos);
   }
 
   // function for fighting with neighbors
@@ -387,6 +383,14 @@ function Organism(startPos) {
 
   }
 
+  // add a loc to this organism and set its parent to this organism
+  this.addLoc = function(locVector){
+    var retLoc = new Loc(this, locVector)
+    retLoc.color = this.color;
+    this.locs.push(retLoc);
+    return(retLoc);
+  }
+
 
 }
 
@@ -415,6 +419,13 @@ function Grass(startPos) {
       this.locs[locIdx].color = this.color;
     }
   }
+
+  // this.updateAppearance = function() {
+  //   for(var locIdx = 0;  locIdx < this.locs.length; locIdx++){
+  //     var thisLoc = this.locs[locIdx];
+  //     thisLoc.color = this.color;
+  //   }
+  // }
 
 
 }

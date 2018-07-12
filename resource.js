@@ -5,6 +5,7 @@ function Resource(){
   this.entityType = "Resource";
   this.type = "Unassigned";
   this.locs = [];
+  this.ageCounter = 0;
 
   RESOURCES.push(this);
 
@@ -29,6 +30,16 @@ function Rain(){
   this.c = color(0,0,255);
 
   this.cycle = function(){
+    this.ageCounter++;
+
+    for (var locIdx = 0; locIdx < this.locs.length; locIdx++){
+      var thisLoc = this.locs[locIdx];
+      thisLoc.ageCounter++;
+      if(thisLoc.ageCounter > 100) {
+        thisLoc.state = LOCSTATE.DEAD;
+      }
+    }
+
     for(var pxx = 0; pxx < width; pxx++){
       for(var pxy = 0; pxy < height; pxy++){
         // console.log(pxx + " " + pxy);
@@ -39,5 +50,9 @@ function Rain(){
         }
       }
     }
+
+
+
+
   }
 }

@@ -54,11 +54,11 @@ function draw() {
 	refreshLocs();
 
 	// // Output healths
-	// var healths = [];
+	// var healthDeltas = [];
 	// for(var organismsIdx = 0; organismsIdx < ORGANISMS.length; organismsIdx++){
-	// 	healths.push(ORGANISMS[organismsIdx].health);
+	// 	healthDeltas.push(ORGANISMS[organismsIdx].health - ORGANISMS[organismsIdx].locs.length);
 	// }
-	// console.log(healths);
+	// console.log(healthDeltas);
 
 
 	// Organisms do stuff depending on surrounding organisms
@@ -86,8 +86,6 @@ function refreshLocs(){
 		var organism = ORGANISMS[organismsIdx];
 
 		//remove deletable locs from organism locs lists
-		// organism.locs = organism.locs.filter(function(organismLoc){return(!organismLoc.deletable)});
-		// organism.soakLocs = organism.soakLocs.filter(function(organismSoakLoc){return(!organismSoakLoc.deletable)});
 		organism.locs = organism.locs.filter(function(organismLoc){return(organismLoc.state != LOCSTATE.DEAD)});
 		organism.soakLocs = organism.soakLocs.filter(function(organismSoakLoc){return(organismSoakLoc.state != LOCSTATE.DEAD)});
 	}
@@ -96,7 +94,6 @@ function refreshLocs(){
 		var resource = RESOURCES[resourcesIdx];
 
 		//remove soaked locs from resource ownership
-		// resource.locs = resource.locs.filter(function(resourceLoc){return(!resourceLoc.soaked)});
 		resource.locs = resource.locs.filter(function(resourceLoc){return(resourceLoc.state != LOCSTATE.DEAD)});
 		resource.locs = resource.locs.filter(function(resourceLoc){return(resourceLoc.state != LOCSTATE.SOAKED)});
 	}

@@ -4,6 +4,7 @@ function Loc(parent, pos) {
   this.pos = pos; // actual xy position as vector
   this.ageCounter = 0; // age counter for specific location
   this.color = color(0); // color to show
+  // this.color = color(255,0,0);
   this.state = LOCSTATE.IDLE;
   // this.interactionType = LOCINTERACTION.IDLE;
   this.neighbors = []; // to store other locs of interest when determining actions
